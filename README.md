@@ -16,11 +16,11 @@
     <img src="https://avatars.githubusercontent.com/u/65377832?s=400&u=12c57a2350bcd69068ced71f630ca0d5559e6621&v=4)}" alt="Logo" width="80" height="80" style="border-radius:100%">
   </a>
 
-  <h3 align="center">Evolving Neural Networks with Particle Swam Optimization
+  <h3 align="center"> Novel Indicator based on Lineal Regression, ADX, and RSI variation.
 </h3>
 
   <p align="center">
-    How to optimize a neural network without backpropagation
+    Novel Indicator based on Lineal Regression, ADX, and RSI variation.
     <br />
     <!-- <a href="https://github.com/estebanvz/crypto_trading_lr_adx"><strong>Explore the docs »</strong></a>
     <br /> -->
