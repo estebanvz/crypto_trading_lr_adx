@@ -1,0 +1,116 @@
+//@version=4
+// Thanks to the nexts authors:
+// LazyBear Code Monitor
+// ADX v4 from BeikabuOyaji
+
+study(title = 'Linear Regression ADX Eyachay', shorttitle = 'Eyachay')
+
+// colorGreen = #00ff00
+colorGreen = color.rgb(0,255,0,1)
+colorRed = color.rgb(255,0,0,1)
+
+colorDarkGreen = color.rgb(153, 167, 153)
+colorDarkRed = 	color.rgb(255, 175, 175)
+
+
+colorGreenLR =color.rgb(62, 124, 23)
+colorRedLR = color.rgb(174, 67, 30)
+
+colorDarkGreenLR = color.rgb(62, 124, 23)
+colorDarkRedLR = 	color.rgb(174, 67, 30)		
+
+
+colorWhite = color.rgb(150,150,150,1)
+colorBlack = color.rgb(10,10,10,1)
+buyColor= color.rgb(173,223,173,1)
+sellColor= color.rgb(255,159,0,1)
+
+buyColor2= color.rgb(173,223,173,50)
+sellColor2= color.rgb(255,159,0,50)
+
+showWT = input(false, title="Wave Trend")
+
+lengthKC=input(20, title="LR Tamaño")
+adxlen = input(14, title="ADX Suavizado")
+th = input(23, title="ADX Límite")
+nivel = input(title="Sensibilidad", defval="Basico", options=["Basico","Intermedio","Avanzado","Experto"] )
+colorAlert = colorWhite
+wtShow = input(true, title = 'Show WaveTrend', type = input.bool)
+wtChannelLen = input(9, title = 'WT Channel Length', type = input.integer)
+wtAverageLen = input(12, title = 'WT Average Length', type = input.integer)
+wtMASource = input(hlc3, title = 'WT MA Source', type = input.source)
+wtMALen = input(3, title = 'WT MA Length', type = input.integer)
+obLevel = input(53, title = 'WT Overbought Level 1', type = input.integer)
+osLevel = input(-53, title = 'WT Oversold Level 1', type = input.integer)
+
+
+
+
+
+// Functions
+
+normalize(_src, _min, _max) => 
+    var _historicMin =  0.0
+    var _historicMax = 0.0
+    _historicMin := min(nz(_src, _historicMin), _historicMin)
+    _historicMax := max(nz(_src, _historicMax), _historicMax)
+    _historicMax := _historicMin - (_historicMin * 2)
+    _min + (_max - _min) * (_src - _historicMin) / max(_historicMax - _historicMin, 10e-10)
+f_wavetrend(src, chlen, avg, malen, tf) =>
+    tfsrc = security(syminfo.tickerid, tf, src)
+    esa = ema(tfsrc, chlen)
+    de = ema(abs(tfsrc - esa), chlen)
+    ci = (tfsrc - esa) / (0.015 * de)
+    wt1 = security(syminfo.tickerid, tf, ema(ci, avg))
+    wt2 = security(syminfo.tickerid, tf, sma(wt1, malen))
+    wtVwap = wt1 - wt2
+    wtOversold = wt2 <= osLevel
+    wtOverbought = wt2 >= obLevel
+    wtCross = cross(wt1, wt2)
+    wtCrossUp = wt2 - wt1 <= 0
+    wtCrossDown = wt2 - wt1 >= 0
+    wtCrosslast = cross(wt1[2], wt2[2])
+    wtCrossUplast = wt2[2] - wt1[2] <= 0
+    wtCrossDownlast = wt2[2] - wt1[2] >= 0
+    [wt1, wt2, wtOversold, wtOverbought, wtCross, wtCrossUp, wtCrossDown, wtCrosslast, wtCrossUplast, wtCrossDownlast, wtVwap]
+
+
+
+// LINEAR REGRESSION
+
+val = linreg(close  -  avg(avg(highest(high, lengthKC), lowest(low, lengthKC)),sma(close,lengthKC)),lengthKC,0)
+
+// ADX
+
+[a, b, c] = dmi(adxlen, adxlen)
+DIPlus = a
+DIMinus = b
+sig = c
+
+// VUMANCHU
+[wt1, wt2, wtOversold, wtOverbought, wtCross, wtCrossUp, wtCrossDown, wtCross_last, wtCrossUp_last, wtCrossDown_last, wtVwap] = f_wavetrend(wtMASource, wtChannelLen, wtAverageLen, wtMALen, timeframe.period)
+// COLORS
+
+
+
+if(nivel=="Basico")
+    colorAlert := iff( sig>=th and DIPlus>=DIMinus and sig>sig[1] and val>val[1] ,colorGreen,iff(sig>=th and DIPlus<=DIMinus and sig>sig[1] and val<val[1],colorRed, colorWhite) )
+if(nivel=="Intermedio")
+    colorAlert := iff( DIPlus>=DIMinus and sig>sig[1] and val>val[1],colorGreen,iff(DIPlus<=DIMinus and sig>sig[1] and val<val[1],colorRed, colorWhite) )
+if(nivel=="Avanzado")
+    colorAlert := iff( DIPlus>=DIMinus and val>val[1],iff(sig>sig[1], colorGreen,colorDarkGreen),iff(DIPlus<=DIMinus and val<val[1],iff(sig>sig[1],colorRed,colorDarkRed), colorWhite) )
+if(nivel=="Experto")
+    colorAlert := iff( val>val[1],iff(sig>sig[1] and DIPlus>=DIMinus,colorGreen,iff(sig<sig[1],colorDarkGreen,colorWhite) ) ,iff(sig>sig[1] and DIPlus<=DIMinus,colorRed,iff(sig<sig[1],colorDarkRed,colorWhite) ))
+
+bcolor = iff( val > 0,iff( val > nz(val[1]), colorDarkGreenLR, colorRedLR),iff( val < nz(val[1]), colorDarkRedLR, colorGreenLR))
+adxcolor = iff( sig >= th,iff( DIPlus >= DIMinus, iff(sig>sig[1],colorGreen,colorDarkGreen), iff(sig<sig[1],colorDarkRed,colorRed)),iff( DIPlus >= DIMinus, iff(sig>sig[1],colorGreen,colorDarkGreen), iff(sig<sig[1],colorDarkRed,colorRed)))
+
+wt2n= normalize(wt2,-15,15)
+
+plot(normalize(val,-30,30), color=bcolor, title= "Regresión Lineal", style = plot.style_columns, linewidth=4)
+plot(th, title = 'Adx Limite', color = colorWhite, linewidth = 1, style = plot.style_stepline)
+plot(iff(colorAlert==colorWhite,na,0), title = 'Compra o Venta', color = colorAlert, linewidth = 2, style = plot.style_cross)
+plot(wtShow ? wt2n : na, style = plot.style_area, title = 'WT Wave',color=color.white, transp = 70)
+plot(cross(wt1, wt2)?wt2n:na, linewidth = 2,color= wt2 - wt1 > 0 ? color.red : color.lime, style=plot.style_circles)
+plot(sig, color = adxcolor, linewidth = 1)
+plot(sig>th?sig:na, color = adxcolor, linewidth = 1, style = plot.style_circles)
