@@ -66,11 +66,21 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-This project was designed to help the initial traders to operate long and short trades. The current indicator could be find in this link.
+This project was designed to help the initial traders to operate long and short trades on crypto market. The current indicator could be find in this link.
 
 [Indicator](https://es.tradingview.com/script/1Atl4Yx2/)
 
+![Image](/indicator.png)
 
+Image of the indicator and the graph of BTC/USDT.
+
+We have three flags to trade: the linear regression (red/green mountains), the adx (red/green line), and the RSI variation (white mountain with green/red points).
+
+When the linear regression is green, the ADX is green, and the RSI shows green point, we made a long trade. 
+
+According to the experience of each trader, they must decide long or short trade when just two of the three indicators are green.
+
+A naive approach is just buy with out leverage when the three indicators are green and sell when one of the indicator flip to red.
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
